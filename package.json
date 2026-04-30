@@ -1,0 +1,37 @@
+{
+  "name": "@promptunit/sdk",
+  "version": "0.1.0",
+  "description": "Official PromptUnit SDK — AI inference proxy with automatic failover",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["promptunit", "openai", "llm", "ai", "proxy", "routing", "inference"],
+  "author": "PromptUnit",
+  "license": "MIT",
+  "peerDependencies": {
+    "openai": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "openai": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "openai": "^4.0.0"
+  }
+}
