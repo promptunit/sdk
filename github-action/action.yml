@@ -1,0 +1,17 @@
+name: 'AI Cost Analyzer'
+description: 'Detects AI API calls in your PR and estimates what PromptUnit routing would save.'
+author: 'PromptUnit'
+
+branding:
+  icon: 'dollar-sign'
+  color: 'yellow'
+
+inputs:
+  github-token:
+    description: 'GitHub token for posting PR comments'
+    required: true
+    default: ${{ github.token }}
+
+runs:
+  using: 'node20'
+  main: 'github-action/dist/index.js'
