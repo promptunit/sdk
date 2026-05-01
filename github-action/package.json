@@ -1,0 +1,16 @@
+{
+  "name": "@promptunit/ai-cost-analyzer",
+  "version": "1.0.0",
+  "description": "GitHub Action that detects AI API calls in PRs and estimates PromptUnit routing savings",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/index.js -o dist"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.1"
+  }
+}
