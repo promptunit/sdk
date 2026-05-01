@@ -1,0 +1,16 @@
+# Add this file to your repo at .github/workflows/ai-cost-analyzer.yml
+name: AI Cost Analyzer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: promptunit/sdk@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
