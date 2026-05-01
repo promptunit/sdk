@@ -1,13 +1,14 @@
 # @promptunit/sdk
 
-> Drop-in OpenAI client that routes LLM calls to cheaper models automatically — with built-in failover.
+> Drop-in OpenAI client that routes LLM calls to cheaper models automatically, with built-in failover.
 
 [![npm version](https://img.shields.io/npm/v/@promptunit/sdk)](https://www.npmjs.com/package/@promptunit/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Powered by PromptUnit](https://img.shields.io/badge/Powered%20by-PromptUnit-D4A535?style=flat-square)](https://www.promptunit.ai)
 
 ## The problem
 
-Most teams route all AI calls to GPT-4o by default. 60–70% of those calls don't need GPT-4o. The fix is routing — but building and maintaining a routing layer is engineering work nobody wants to own.
+Most teams route all AI calls to GPT-4o by default. 60-70% of those calls don't need GPT-4o. The fix is routing, but building and maintaining a routing layer is engineering work nobody wants to own.
 
 PromptUnit does it for you. One line change. Routing happens transparently in the proxy.
 
@@ -41,14 +42,14 @@ That's it. The SDK wraps your OpenAI client. Routing happens inside the proxy �
 ```
 Your app
   └─ client.chat.completions.create({ model: "gpt-4o", ... })
-       └─ PromptUnit proxy (Inferio™ engine)
+       └─ PromptUnit proxy (Inferio engine)
             ├─ Classifies task: summarization / classification / extraction / reasoning
             ├─ Scores complexity across 27 signals
             ├─ Routes to cheapest model that clears your quality threshold
             └─ Returns response in standard OpenAI format
 ```
 
-Your code receives a standard OpenAI `ChatCompletion` object. It never knows the call was routed.
+Your code receives a standard OpenAI ChatCompletion object. It never knows the call was routed.
 
 ## Savings by task type
 
@@ -62,16 +63,11 @@ Your code receives a standard OpenAI `ChatCompletion` object. It never knows the
 | Complex reasoning | GPT-4o | GPT-4o | 0% — kept on flagship |
 | Code generation | GPT-4o | GPT-4o | 0% — kept on flagship |
 
-Teams spending $5K–$50K/month on AI APIs typically see **40–70% cost reduction** after the 14-day observation period.
+Teams spending $5K-$50K/month on AI APIs typically see **40-70% cost reduction** after the 14-day observation period.
 
 ## Automatic failover
 
 If PromptUnit is ever unreachable (timeout, 5xx), the SDK falls back directly to OpenAI — no errors, no downtime, no action required on your side.
-
-```ts
-// This is handled automatically
-// Your code never sees a proxy failure
-```
 
 ## 14-day observation period
 
@@ -84,8 +80,6 @@ Before any routing changes your traffic, PromptUnit runs in **shadow mode**:
 You see the full forecast in the dashboard before enabling anything. No routing until you click.
 
 ## Supported providers
-
-The proxy routes across all major providers. Your application continues to use the OpenAI SDK format regardless of which provider handles the request.
 
 | Provider | Models |
 |----------|--------|
@@ -107,8 +101,6 @@ const client = createPromptUnit({
 ```
 
 ## Alternative: base URL swap (no package needed)
-
-If you prefer not to install the package, swap your `base_url` directly:
 
 ```python
 # Python
@@ -135,6 +127,16 @@ Works with any OpenAI-compatible SDK: Python, Go, Ruby, any HTTP client.
 Free to start. PromptUnit takes **20% of verified savings only**. If routing saves you nothing, you pay nothing.
 
 A team saving $5,440/month pays $1,088/month. Net saving: $4,352/month.
+
+## Add the badge to your README
+
+If you're using PromptUnit in your project, add this to your README:
+
+```markdown
+[![Powered by PromptUnit](https://img.shields.io/badge/Powered%20by-PromptUnit-D4A535?style=flat-square)](https://www.promptunit.ai)
+```
+
+[![Powered by PromptUnit](https://img.shields.io/badge/Powered%20by-PromptUnit-D4A535?style=flat-square)](https://www.promptunit.ai)
 
 ## Get your API key
 
