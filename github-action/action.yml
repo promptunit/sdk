@@ -14,4 +14,4 @@ inputs:
 
 runs:
   using: 'node20'
-  main: 'github-action/dist/index.js'
+  main: 'github-action/index.js'
