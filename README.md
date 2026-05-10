@@ -145,3 +145,7 @@ Sign up at [promptunit.ai](https://www.promptunit.ai) — free, 5-minute setup, 
 ## License
 
 MIT
+
+---
+
+If this saved you money, a star helps others find it. [Leave a star on GitHub](https://github.com/promptunit/sdk)
