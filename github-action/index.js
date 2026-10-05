@@ -1,19 +1,18 @@
 'use strict'
 const https = require('https')
 
-const AI_MODELS = [
-  { pattern: /gpt-4o-mini/i, model: 'GPT-4o-mini', tier: 'cheap' },
-  { pattern: /gpt-4o/i, model: 'GPT-4o', tier: 'expensive' },
-  { pattern: /gpt-4-turbo/i, model: 'GPT-4 Turbo', tier: 'expensive' },
-  { pattern: /o[13]-(?:mini|preview)?/i, model: 'o-series', tier: 'expensive' },
-  { pattern: /claude-opus/i, model: 'Claude Opus', tier: 'expensive' },
-  { pattern: /claude-sonnet/i, model: 'Claude Sonnet', tier: 'mid' },
-  { pattern: /claude-haiku/i, model: 'Claude Haiku', tier: 'cheap' },
-  { pattern: /gemini-2\.5-pro/i, model: 'Gemini 2.5 Pro', tier: 'expensive' },
-  { pattern: /gemini-2\.5-flash/i, model: 'Gemini 2.5 Flash', tier: 'cheap' },
+// Expensive models worth a second look. Cheaper variants (mini, nano, flash, haiku) are never flagged.
+const EXPENSIVE_MODELS = [
+  { pattern: /\bgpt-5(?:\.\d+)?(?![\d.])(?!-(?:mini|nano))/i, model: 'GPT-5' },
+  { pattern: /\bgpt-4o(?!-mini)/i, model: 'GPT-4o' },
+  { pattern: /\bgpt-4-turbo/i, model: 'GPT-4 Turbo' },
+  { pattern: /["'`]o[13](?:-pro|-preview)?["'`]/i, model: 'OpenAI o-series' },
+  { pattern: /claude-(?:3-)?opus/i, model: 'Claude Opus' },
+  { pattern: /gemini-[\d.]+-pro/i, model: 'Gemini Pro' },
 ]
 
-const ALREADY_OPTIMIZED = [/promptunit/i, /api\.promptunit\.ai/i, /@promptunit\/sdk/i]
+// Already connected: any PromptUnit address or name in the added lines.
+const ALREADY_CONNECTED = /promptunit/i
 
 function ghReq(path, method, body, token) {
   return new Promise((resolve, reject) => {
@@ -42,8 +41,44 @@ function ghReq(path, method, body, token) {
   })
 }
 
+function commentFor(detected) {
+  const modelNames = detected.map(m => `**${m.model}**`).join(', ')
+  return `### AI Cost Analyzer
+
+This PR uses ${modelNames}. Calls like classification, extraction and summarization often don't need the most expensive model.
+
+| | Without routing | With PromptUnit |
+|--|--|--|
+| Simple tasks (classification, extraction, summarization) | Full model price | Up to 94% cheaper |
+| Complex tasks (reasoning, code generation) | Full model price | Unchanged |
+| Setup | | Change one line, the base URL |
+
+PromptUnit checks each request: when a cheaper model is just as good for it, PromptUnit uses that model; otherwise the request goes to the model you chose. Savings start with the first request, and every request shows its cost and saving on the dashboard. Free until it has saved you money, then 20% of what it saves.
+
+**The one-line change, the base URL:**
+\`\`\`ts
+// Before
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+
+// After
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://www.promptunit.ai/api/proxy/openai",
+  defaultHeaders: { "x-promptunit-key": process.env.PROMPTUNIT_API_KEY },
+})
+\`\`\`
+
+Using Anthropic, Google, Groq, DeepSeek or OpenRouter? Same idea: https://www.promptunit.ai/docs
+
+[Start free](https://www.promptunit.ai)
+
+---
+*Posted by [PromptUnit AI Cost Analyzer](https://github.com/promptunit/sdk). Remove this action from your workflow to stop these comments.*
+`
+}
+
 async function run() {
-  const token = process.env.INPUT_GITHUB_TOKEN || process.env.GITHUB_TOKEN
+  const token = process.env.INPUT_GITHUB_TOKEN || process.env['INPUT_GITHUB-TOKEN'] || process.env.GITHUB_TOKEN
   const eventPath = process.env.GITHUB_EVENT_PATH
   const repo = process.env.GITHUB_REPOSITORY
 
@@ -57,66 +92,26 @@ async function run() {
   const [owner, repoName] = repo.split('/')
 
   // Get PR files
-  const filesRes = await ghReq(`/repos/${owner}/${repoName}/pulls/${prNumber}/files`, 'GET', null, token)
+  const filesRes = await ghReq(`/repos/${owner}/${repoName}/pulls/${prNumber}/files?per_page=100`, 'GET', null, token)
   if (filesRes.status !== 200) { console.log('Could not fetch PR files:', filesRes.status); return }
 
   const patch = filesRes.body.map(f => f.patch || '').join('\n')
   const addedLines = patch.split('\n').filter(l => l.startsWith('+')).join('\n')
 
-  // Skip if PromptUnit already in use
-  if (ALREADY_OPTIMIZED.some(p => p.test(addedLines))) {
-    console.log('PromptUnit already integrated. Skipping.')
+  if (ALREADY_CONNECTED.test(addedLines)) {
+    console.log('PromptUnit already connected. Skipping.')
     return
   }
 
-  // Detect expensive AI model usage in added lines
-  const detected = []
-  for (const m of AI_MODELS) {
-    if (m.tier === 'expensive' && m.pattern.test(addedLines)) {
-      if (!detected.find(d => d.model === m.model)) detected.push(m)
-    }
-  }
-
-  // Only post if expensive models detected
+  const detected = EXPENSIVE_MODELS.filter(m => m.pattern.test(addedLines))
   if (detected.length === 0) { console.log('No expensive AI model usage detected. Skipping.'); return }
 
-  const modelNames = detected.map(m => `**${m.model}`).join(', ')
+  const body = commentFor(detected)
 
-  const body = `### AI Cost Analyzer
-
-This PR uses ${modelNames}**. Based on typical production traffic, 60-70% of these calls could be handled by cheaper models with no quality impact.
-
-| | Without routing | With PromptUnit |
-|--|--|--|
-| Simple tasks (classification, extraction, summarization) | Full model price | Up to 94% cheaper |
-| Complex tasks (reasoning, code gen) | Full model price | Unchanged |
-| Setup time | | ~5 minutes |
-
-PromptUnit runs in **shadow mode for 14 days** — logs your traffic, classifies each request, and shows you the exact savings before routing anything. No risk. No routing until you click.
-
-**One line change:**
-\`\`\`ts
-// Before
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
-// After
-import { createPromptUnit } from "@promptunit/sdk"
-const openai = createPromptUnit({
-  promptunitKey: process.env.PROMPTUNIT_API_KEY,
-  openaiKey: process.env.OPENAI_API_KEY
-})
-\`\`\`
-
-[Start free 14-day audit](https://www.promptunit.ai)
-
----
-*Posted by [PromptUnit AI Cost Analyzer](https://github.com/promptunit/sdk) — remove this action from your workflow to stop these comments.*
-`
-
-  // Check for existing comment to avoid duplicates
-  const commentsRes = await ghReq(`/repos/${owner}/${repoName}/issues/${prNumber}/comments`, 'GET', null, token)
+  // Update our earlier comment instead of posting a second one
+  const commentsRes = await ghReq(`/repos/${owner}/${repoName}/issues/${prNumber}/comments?per_page=100`, 'GET', null, token)
   const existing = Array.isArray(commentsRes.body)
-    ? commentsRes.body.find(c => c.body.includes('AI Cost Analyzer') && c.body.includes('PromptUnit'))
+    ? commentsRes.body.find(c => c.body && c.body.includes('AI Cost Analyzer') && c.body.includes('PromptUnit'))
     : null
 
   if (existing) {
