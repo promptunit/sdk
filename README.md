@@ -1,151 +1,43 @@
-# @promptunit/sdk
+# @promptunit/sdk: no longer maintained
 
-> Drop-in OpenAI client that routes LLM calls to cheaper models automatically, with built-in failover.
+> **This package is no longer maintained. Please don't install it.**
+> PromptUnit needs no package: connect by changing your app's AI address (base URL).
+> Setup guides: https://www.promptunit.ai/docs
 
-[![npm version](https://img.shields.io/npm/v/@promptunit/sdk)](https://www.npmjs.com/package/@promptunit/sdk)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Powered by PromptUnit](https://img.shields.io/badge/Powered%20by-PromptUnit-D4A535?style=flat-square)](https://www.promptunit.ai)
+## Connect without a package
 
-## The problem
-
-Most teams route all AI calls to GPT-4o by default. 60-70% of those calls don't need GPT-4o. The fix is routing, but building and maintaining a routing layer is engineering work nobody wants to own.
-
-PromptUnit does it for you. One line change. Routing happens transparently in the proxy.
-
-## Install
-
-```bash
-npm install @promptunit/sdk
-```
-
-## Quickstart
+**OpenAI SDK (Node.js)**
 
 ```ts
-import { createPromptUnit } from "@promptunit/sdk";
+import OpenAI from "openai"
 
-const client = createPromptUnit({
-  promptunitKey: process.env.PROMPTUNIT_API_KEY,
-  openaiKey: process.env.OPENAI_API_KEY,
-});
-
-// Your existing code works unchanged
-const response = await client.chat.completions.create({
-  model: "gpt-4o",
-  messages: [{ role: "user", content: "Summarize this text..." }],
-});
-```
-
-That's it. The SDK wraps your OpenAI client. Routing happens inside the proxy — your application never changes.
-
-## What happens to each request
-
-```
-Your app
-  └─ client.chat.completions.create({ model: "gpt-4o", ... })
-       └─ PromptUnit proxy (Inferio engine)
-            ├─ Classifies task: summarization / classification / extraction / reasoning
-            ├─ Scores complexity across 27 signals
-            ├─ Routes to cheapest model that clears your quality threshold
-            └─ Returns response in standard OpenAI format
-```
-
-Your code receives a standard OpenAI ChatCompletion object. It never knows the call was routed.
-
-## Savings by task type
-
-| Task | Default model | Routed to | Cost reduction |
-|------|--------------|-----------|---------------|
-| Classification | GPT-4o | GPT-4o-mini | 94% |
-| Summarization | GPT-4o | GPT-4o-mini | 94% |
-| Structured extraction | GPT-4o | GPT-4o-mini | 94% |
-| Short-form generation | GPT-4o | GPT-4o-mini | 94% |
-| Customer support (standard) | GPT-4o | Claude Haiku 4.5 | 88% |
-| Complex reasoning | GPT-4o | GPT-4o | 0% — kept on flagship |
-| Code generation | GPT-4o | GPT-4o | 0% — kept on flagship |
-
-Teams spending $5K-$50K/month on AI APIs typically see **40-70% cost reduction** after the 14-day observation period.
-
-## Automatic failover
-
-If PromptUnit is ever unreachable (timeout, 5xx), the SDK falls back directly to OpenAI — no errors, no downtime, no action required on your side.
-
-## 14-day observation period
-
-Before any routing changes your traffic, PromptUnit runs in **shadow mode**:
-
-- Logs every API call
-- Classifies each request and decides what it would route it to
-- Projects your exact savings
-
-You see the full forecast in the dashboard before enabling anything. No routing until you click.
-
-## Supported providers
-
-| Provider | Models |
-|----------|--------|
-| OpenAI | GPT-4o, GPT-4o-mini, o1, GPT-5.4, GPT-5.5 |
-| Anthropic | Claude Opus 4, Sonnet 4, Haiku 4.5 |
-| Google | Gemini 2.5 Pro, 2.5 Flash, 2.0 Flash |
-| Groq | Llama 4 Maverick, Llama 4 Scout (ultra-low latency) |
-| DeepSeek | V4 Pro, V4 Flash |
-
-## Configuration
-
-```ts
-const client = createPromptUnit({
-  promptunitKey: "pu_...",   // Your PromptUnit API key
-  openaiKey: "sk-...",       // Your OpenAI API key (used as fallback)
-  baseUrl: "https://api.promptunit.ai", // optional, default shown
-  timeout: 8000,             // optional, ms before falling back to OpenAI
-});
-```
-
-## Alternative: base URL swap (no package needed)
-
-```python
-# Python
-client = OpenAI(
-    api_key="sk-...",
-    base_url="https://api.promptunit.ai/api/proxy/openai",
-    default_headers={"x-promptunit-key": "pu_..."},
-)
-```
-
-```ts
-// Node.js / TypeScript
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://api.promptunit.ai/api/proxy/openai",
+  baseURL: "https://www.promptunit.ai/api/proxy/openai",
   defaultHeaders: { "x-promptunit-key": process.env.PROMPTUNIT_API_KEY },
-});
+})
 ```
 
-Works with any OpenAI-compatible SDK: Python, Go, Ruby, any HTTP client.
+**Anthropic SDK (Node.js)**
 
-## Pricing
+```ts
+import Anthropic from "@anthropic-ai/sdk"
 
-Free to start. PromptUnit takes **20% of verified savings only**. If routing saves you nothing, you pay nothing.
-
-A team saving $5,440/month pays $1,088/month. Net saving: $4,352/month.
-
-## Add the badge to your README
-
-If you're using PromptUnit in your project, add this to your README:
-
-```markdown
-[![Powered by PromptUnit](https://img.shields.io/badge/Powered%20by-PromptUnit-D4A535?style=flat-square)](https://www.promptunit.ai)
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: "https://www.promptunit.ai/api/proxy/anthropic",
+  defaultHeaders: { "x-promptunit-key": process.env.PROMPTUNIT_API_KEY },
+})
 ```
 
-[![Powered by PromptUnit](https://img.shields.io/badge/Powered%20by-PromptUnit-D4A535?style=flat-square)](https://www.promptunit.ai)
+Python, AI coding tools (Claude Code, Cursor and others) and OpenRouter: https://www.promptunit.ai/docs
 
-## Get your API key
+## How PromptUnit works today
 
-Sign up at [promptunit.ai](https://www.promptunit.ai) — free, 5-minute setup, no credit card required.
+- Savings start with the first request. There is no 14-day observation period.
+- Each request is checked: when a cheaper model is just as good for it, PromptUnit uses it; otherwise the request goes to the model you asked for.
+- Works with OpenAI, Anthropic, Google, Groq and DeepSeek keys, and with your own OpenRouter key.
+- Every request shows on the dashboard: the model asked for, the model that answered, what it cost and what it saved.
+- Free until PromptUnit has saved you money, then 20% of what it saves. Nothing if it saves nothing.
 
-## License
-
-MIT
-
----
-
-If this saved you money, a star helps others find it. [Leave a star on GitHub](https://github.com/promptunit/sdk)
+Get started: https://www.promptunit.ai
