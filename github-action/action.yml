@@ -1,5 +1,5 @@
 name: 'AI Cost Analyzer'
-description: 'Detects AI API calls in your PR and estimates what PromptUnit routing would save.'
+description: 'Comments on pull requests that add expensive AI models, with how PromptUnit could lower the cost.'
 author: 'PromptUnit'
 
 branding:
@@ -13,5 +13,5 @@ inputs:
     default: ${{ github.token }}
 
 runs:
-  using: 'node20'
-  main: 'github-action/index.js'
+  using: 'node24'
+  main: 'index.js'
