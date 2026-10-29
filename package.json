@@ -1,7 +1,7 @@
 {
   "name": "@promptunit/sdk",
   "version": "0.1.0",
-  "description": "Official PromptUnit SDK — AI inference proxy with automatic failover",
+  "description": "No longer maintained. PromptUnit needs no package: set your API address and add a PromptUnit key. Docs: https://www.promptunit.ai/docs",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
