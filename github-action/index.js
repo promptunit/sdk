@@ -49,13 +49,13 @@ This PR uses ${modelNames}. Calls like classification, extraction and summarizat
 
 | | Without routing | With PromptUnit |
 |--|--|--|
-| Simple tasks (classification, extraction, summarization) | Full model price | Up to 94% cheaper |
+| Simple tasks (classification, extraction, summarization) | Full model price | A cheaper model, when it is just as good |
 | Complex tasks (reasoning, code generation) | Full model price | Unchanged |
-| Setup | | Change one line, the base URL |
+| Setup | | Paste one address as the base URL. Your AI key stays in your app |
 
 PromptUnit checks each request: when a cheaper model is just as good for it, PromptUnit uses that model; otherwise the request goes to the model you chose. Savings start with the first request, and every request shows its cost and saving on the dashboard. Free until it has saved you money, then 20% of what it saves.
 
-**The one-line change, the base URL:**
+**The change: your personal PromptUnit address as the base URL. Your own AI key stays as it is, and PromptUnit never asks for it or stores it.**
 \`\`\`ts
 // Before
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -63,12 +63,11 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 // After
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://www.promptunit.ai/api/proxy/openai",
-  defaultHeaders: { "x-promptunit-key": process.env.PROMPTUNIT_API_KEY },
+  baseURL: "https://www.promptunit.ai/api/proxy/openai/<your PromptUnit key>/v1",
 })
 \`\`\`
 
-Using Anthropic, Google, Groq, DeepSeek or OpenRouter? Same idea: https://www.promptunit.ai/docs
+You get your personal address after sign-up. Using Anthropic, Google, Groq, DeepSeek or OpenRouter? Same idea: https://www.promptunit.ai/docs/connect
 
 [Start free](https://www.promptunit.ai)
 
